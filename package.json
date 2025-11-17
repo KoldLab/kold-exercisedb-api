@@ -43,11 +43,12 @@
     "test": "vitest run",
     "test:ui": "vitest --ui",
     "deploy": "vercel deploy --prod",
+    "commitlint": "commitlint",
     "postinstall": "npx simple-git-hooks"
   },
   "simple-git-hooks": {
-    "pre-commit": "bun run lint && bun run format",
-    "commit-msg": "bun run commitlint --edit $1"
+    "pre-commit": "npm run lint && npm run format",
+    "commit-msg": "npm run commitlint -- --edit $1"
   },
   "dependencies": {
     "@hono/node-server": "^1.12.1",
