@@ -10,8 +10,9 @@ on:
       - develop
 
 jobs:
-  relase:
+  deploy-staging:
     name: Test and Deploy to Staging
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
@@ -40,3 +41,38 @@ jobs:
           vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID_EXERCISEDB_STAGING}}
           vercel-args: --prod
           scope: ${{ secrets.VERCEL_ORG_ID }}
+
+  deploy-develop:
+    name: Deploy Develop Branch
+    if: github.ref == 'refs/heads/develop'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Cache Dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.bun
+          key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lockb') }}
+          restore-keys: ${{ runner.os }}-bun-
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1.2.0
+      - run: bun install
+
+      - name: Deploy to Preview (Develop)
+        id: deploy-vercel-develop
+        uses: amondnet/vercel-action@v25.2.0
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID_EXERCISEDB }}
+          vercel-args: --target=preview
+          scope: ${{ secrets.VERCEL_ORG_ID }}
+        
+      - name: Output Deployment URL
+        run: |
+          echo "🚀 Dev API deployed!"
+          echo "Preview URL: ${{ steps.deploy-vercel-develop.outputs.preview-url }}"
+          echo "Use this URL in your dev frontend environment"
