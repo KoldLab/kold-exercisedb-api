@@ -32,12 +32,14 @@
     }
   },
   "scripts": {
-    "dev": "bun run --hot src/server.ts",
-    "start": "bun dist/server.js",
+    "dev": "tsx watch src/server.ts",
+    "dev:bun": "bun run --hot src/server.ts",
+    "start": "node dist/server.js",
+    "start:bun": "bun dist/server.js",
     "build": "tsc && tsc-alias",
     "format": "prettier --write \"./**/*.{js,ts,json}\"",
     "lint": "eslint .",
-    "lint:fix": "bun run lint --fix",
+    "lint:fix": "eslint . --fix",
     "test": "vitest run",
     "test:ui": "vitest --ui",
     "deploy": "vercel deploy --prod",
@@ -77,6 +79,7 @@
     "prettier": "^3.3.3",
     "simple-git-hooks": "^2.11.1",
     "tsc-alias": "^1.8.10",
+    "tsx": "^4.19.2",
     "typescript": "^5.5.4",
     "typescript-eslint": "^8.2.0",
     "vitest": "^2.0.5"
