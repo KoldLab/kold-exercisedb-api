@@ -36,11 +36,14 @@ export class App {
 
   private initializeHealthRoute() {
     this.app.get('/health', (c) => {
-      return c.json({
-        status: 'healthy',
-        timestamp: new Date().toISOString(),
-        uptime: process.uptime()
-      }, 200)
+      return c.json(
+        {
+          status: 'healthy',
+          timestamp: new Date().toISOString(),
+          uptime: process.uptime()
+        },
+        200
+      )
     })
   }
 
