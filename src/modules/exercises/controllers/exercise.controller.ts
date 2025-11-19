@@ -207,8 +207,8 @@ export class ExerciseController implements Routes {
               type: 'string',
               example: 'chest,triceps'
             }),
-            equipment: z.string().optional().openapi({
-              title: 'Equipment',
+            equipments: z.string().optional().openapi({
+              title: 'Equipments',
               description: 'Comma-separated list of equipment',
               type: 'string',
               example: 'dumbbell,barbell'
@@ -253,7 +253,7 @@ export class ExerciseController implements Routes {
           limit = 10,
           search,
           muscles,
-          equipment,
+          equipments,
           bodyParts,
           sortBy = 'name',
           sortOrder = 'desc'
@@ -266,7 +266,7 @@ export class ExerciseController implements Routes {
           limit,
           search,
           targetMuscles: muscles ? muscles.split(',').map((m) => m.trim()) : undefined,
-          equipments: equipment ? equipment.split(',').map((e) => e.trim()) : undefined,
+          equipments: equipments ? equipments.split(',').map((e) => e.trim()) : undefined,
           bodyParts: bodyParts ? bodyParts.split(',').map((b) => b.trim()) : undefined,
           sort: { [sortBy]: sortOrder === 'asc' ? 1 : -1 }
         })
@@ -274,7 +274,7 @@ export class ExerciseController implements Routes {
         const queryParams = new URLSearchParams()
         if (search) queryParams.append('search', search)
         if (muscles) queryParams.append('muscles', muscles)
-        if (equipment) queryParams.append('equipment', equipment)
+        if (equipments) queryParams.append('equipments', equipments)
         if (bodyParts) queryParams.append('bodyParts', bodyParts)
         queryParams.append('sortBy', sortBy)
         queryParams.append('sortOrder', sortOrder)

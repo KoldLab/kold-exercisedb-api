@@ -96,7 +96,32 @@ Home.get('/', (c) => {
             <p class="text-2xl md:text-4xl text-transparent font-bold leading-none bg-clip-text bg-gradient-to-r from-gray-300 via-gray-500 to-gray-100">
               ExerciseDB API
             </p>
+            <span id="health-indicator" class="text-2xl md:text-4xl">⏳</span>
           </div>
+          <script
+            dangerouslySetInnerHTML={{
+              __html: `
+            (async function() {
+              try {
+                const response = await fetch('/health');
+                const data = await response.json();
+                const indicator = document.getElementById('health-indicator');
+                if (response.ok && data.status === 'healthy') {
+                  indicator.textContent = '✅';
+                  indicator.className = 'text-2xl md:text-4xl';
+                } else {
+                  indicator.textContent = '❌';
+                  indicator.className = 'text-2xl md:text-4xl';
+                }
+              } catch (error) {
+                const indicator = document.getElementById('health-indicator');
+                indicator.textContent = '❌';
+                indicator.className = 'text-2xl md:text-4xl';
+              }
+            })();
+          `
+            }}
+          />
 
           <div class="grid grid-cols-1 sm:grid-cols-4 lg:grid-cols-4 xl:grid-cols-8 gap-2 sm:gap-0 relative grid-flow-row">
             <a

@@ -31,6 +31,17 @@ export class App {
       this.app.route('/api/v1', route.controller)
     })
     this.app.route('/', Home)
+    this.initializeHealthRoute()
+  }
+
+  private initializeHealthRoute() {
+    this.app.get('/health', (c) => {
+      return c.json({
+        status: 'healthy',
+        timestamp: new Date().toISOString(),
+        uptime: process.uptime()
+      }, 200)
+    })
   }
 
   private initializeGlobalMiddleware() {
