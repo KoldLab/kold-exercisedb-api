@@ -24,12 +24,23 @@ export class ExerciseController implements Routes {
   }
 
   /**
-   * Transforms exercise objects to use proxy URLs for GIFs
+   * Removes "Step:X" prefix from instructions
+   */
+  private formatInstructions(instructions: string[]): string[] {
+    return instructions.map((instruction) => {
+      // Remove "Step:1", "Step:2", etc. and trim any leading whitespace
+      return instruction.replace(/^Step:\d+\s*/, '').trim()
+    })
+  }
+
+  /**
+   * Transforms exercise objects to use proxy URLs for GIFs and format instructions
    */
   private transformExercises(exercises: any[], origin: string): any[] {
     return exercises.map((exercise) => ({
       ...exercise,
-      gifUrl: this.transformGifUrl(exercise.gifUrl, origin)
+      gifUrl: this.transformGifUrl(exercise.gifUrl, origin),
+      instructions: this.formatInstructions(exercise.instructions || [])
     }))
   }
 
@@ -377,7 +388,8 @@ export class ExerciseController implements Routes {
           success: true,
           data: {
             ...exercise,
-            gifUrl: this.transformGifUrl(exercise.gifUrl, origin)
+            gifUrl: this.transformGifUrl(exercise.gifUrl, origin),
+            instructions: this.formatInstructions(exercise.instructions || [])
           }
         })
       }
