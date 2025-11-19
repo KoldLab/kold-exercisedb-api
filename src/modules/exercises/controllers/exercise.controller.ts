@@ -11,6 +11,28 @@ export class ExerciseController implements Routes {
     this.controller = new OpenAPIHono()
     this.exerciseService = new ExerciseService()
   }
+
+  /**
+   * Transforms CDN GIF URLs to proxy URLs for CORS support
+   */
+  private transformGifUrl(gifUrl: string, origin: string): string {
+    if (gifUrl.startsWith('https://v1.cdn.exercisedb.dev/media/')) {
+      const filename = gifUrl.replace('https://v1.cdn.exercisedb.dev/media/', '')
+      return `${origin}/api/v1/media/${filename}`
+    }
+    return gifUrl
+  }
+
+  /**
+   * Transforms exercise objects to use proxy URLs for GIFs
+   */
+  private transformExercises(exercises: any[], origin: string): any[] {
+    return exercises.map((exercise) => ({
+      ...exercise,
+      gifUrl: this.transformGifUrl(exercise.gifUrl, origin)
+    }))
+  }
+
   private buildPaginationUrls(
     origin: string,
     pathname: string,
@@ -100,7 +122,7 @@ export class ExerciseController implements Routes {
             previousPage,
             nextPage
           },
-          data: [...exercises]
+          data: this.transformExercises(exercises, origin)
         })
       }
     )
@@ -181,7 +203,7 @@ export class ExerciseController implements Routes {
             previousPage,
             nextPage
           },
-          data: [...exercises]
+          data: this.transformExercises(exercises, origin)
         })
       }
     )
@@ -297,7 +319,7 @@ export class ExerciseController implements Routes {
             previousPage,
             nextPage
           },
-          data: [...exercises]
+          data: this.transformExercises(exercises, origin)
         })
       }
     )
@@ -348,11 +370,15 @@ export class ExerciseController implements Routes {
       }),
       async (ctx) => {
         const exerciseId = ctx.req.param('exerciseId')
+        const { origin } = new URL(ctx.req.url)
         const exercise = await this.exerciseService.getExerciseById({ exerciseId })
 
         return ctx.json({
           success: true,
-          data: exercise
+          data: {
+            ...exercise,
+            gifUrl: this.transformGifUrl(exercise.gifUrl, origin)
+          }
         })
       }
     )
@@ -413,7 +439,7 @@ export class ExerciseController implements Routes {
             previousPage,
             nextPage
           },
-          data: [...exercises]
+          data: this.transformExercises(exercises, origin)
         })
       }
     )
@@ -473,7 +499,7 @@ export class ExerciseController implements Routes {
             previousPage,
             nextPage
           },
-          data: [...exercises]
+          data: this.transformExercises(exercises, origin)
         })
       }
     )
@@ -548,7 +574,7 @@ export class ExerciseController implements Routes {
             previousPage,
             nextPage
           },
-          data: [...exercises]
+          data: this.transformExercises(exercises, origin)
         })
       }
     )

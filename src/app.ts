@@ -6,6 +6,9 @@ import { Home } from './pages/home'
 import { Routes } from '#common/types'
 import type { HTTPException } from 'hono/http-exception'
 import { cors } from 'hono/cors'
+import axios from 'axios'
+import { promises as fs } from 'fs'
+import path from 'path'
 export class App {
   private app: OpenAPIHono
   constructor(routes: Routes[]) {
@@ -26,6 +29,9 @@ export class App {
   }
 
   private initializeRoutes(routes: Routes[]) {
+    // Register media proxy first to avoid conflicts with OpenAPI routes
+    this.initializeMediaProxy()
+
     routes.forEach((route) => {
       route.initRoutes()
       this.app.route('/api/v1', route.controller)
@@ -44,6 +50,65 @@ export class App {
         },
         200
       )
+    })
+  }
+
+  private initializeMediaProxy() {
+    // OPTIONS handler for CORS preflight
+    this.app.options('/api/v1/media/:filename', (c) => {
+      c.res.headers.set('Access-Control-Allow-Origin', '*')
+      c.res.headers.set('Access-Control-Allow-Methods', 'GET, OPTIONS')
+      c.res.headers.set('Access-Control-Allow-Headers', '*')
+      return c.body(null, 204)
+    })
+
+    // Proxy route for GIFs with CORS headers - serves from local files first, then CDN
+    this.app.get('/api/v1/media/:filename', async (c) => {
+      const filename = c.req.param('filename')
+
+      // Validate filename to prevent path traversal
+      if (!filename || filename.includes('..') || filename.includes('/') || !filename.endsWith('.gif')) {
+        return c.json({ success: false, message: 'Invalid filename' }, 400)
+      }
+
+      // Set CORS headers
+      c.res.headers.set('Access-Control-Allow-Origin', '*')
+      c.res.headers.set('Access-Control-Allow-Methods', 'GET, OPTIONS')
+      c.res.headers.set('Access-Control-Allow-Headers', '*')
+      c.res.headers.set('Content-Type', 'image/gif')
+      c.res.headers.set('Cache-Control', 'public, max-age=31536000, immutable')
+
+      // Try to serve from local media folder first
+      const mediaPath = path.resolve(process.cwd(), 'media', filename)
+      try {
+        const fileData = await fs.readFile(mediaPath)
+        return c.body(fileData)
+      } catch (localError: any) {
+        // File doesn't exist locally, try CDN
+        if (localError.code !== 'ENOENT') {
+          console.error('Error reading local file:', localError.message)
+        }
+
+        try {
+          const cdnUrl = `https://v1.cdn.exercisedb.dev/media/${filename}`
+          const response = await axios.get(cdnUrl, {
+            responseType: 'arraybuffer',
+            timeout: 15000,
+            headers: {
+              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+            }
+          })
+
+          if (response.status !== 200) {
+            return c.json({ success: false, message: 'Media not found' }, 404)
+          }
+
+          return c.body(response.data)
+        } catch (cdnError: any) {
+          console.error('Error fetching from CDN:', cdnError.message)
+          return c.json({ success: false, message: 'Media not found' }, 404)
+        }
+      }
     })
   }
 
